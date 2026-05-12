@@ -4,11 +4,18 @@
 #include "wlr-virtual-pointer-unstable-v1-client-protocol.h"
 
 #include <wayland-client.h>
+#include <stdlib.h>
+#include <string.h>
 
 static void _apply_transform(
     uint32_t *x, uint32_t *y, uint32_t *width, uint32_t *height,
     enum wl_output_transform transform
 ) {
+    const char *current_desktop = getenv("XDG_CURRENT_DESKTOP");
+    if (current_desktop && strcmp(current_desktop, "Hyprland") == 0) {
+        return;
+    }
+
     uint32_t temp;
 
     switch (transform) {
