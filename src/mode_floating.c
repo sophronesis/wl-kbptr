@@ -15,6 +15,7 @@
 #include <xkbcommon/xkbcommon.h>
 
 #define MIN_SUB_AREA_SIZE (25 * 50)
+#define LABEL_H_PADDING   4
 
 static void get_areas_from_stdin(struct floating_mode_state *ms) {
     size_t       areas_cap   = 256;
@@ -201,7 +202,22 @@ void floating_mode_render(
             cairo_rectangle(cairo, a.x + .5, a.y + .5, a.w - 1, a.h - 1);
             cairo_set_line_width(cairo, 1);
             cairo_stroke(cairo);
+        }
 
+        label_selection_incr(curr_label);
+    }
+
+    // Labels are drawn in a separate pass so that the background of a
+    // neighbouring area cannot paint over a label that extends beyond its
+    // own area.
+    label_selection_set_from_idx(curr_label, 0);
+    for (int i = 0; i < ms->num_areas; i++) {
+        struct rect a = ms->areas[i];
+
+        const bool selectable =
+            label_selection_is_included(curr_label, ms->label_selection);
+
+        if (selectable) {
             cairo_set_font_size(
                 cairo, compute_relative_font_size(&config->label_font_size, a.h)
             );
@@ -217,6 +233,26 @@ void floating_mode_render(
             cairo_text_extents_t te_selected, te_unselected;
             cairo_text_extents(cairo, label_selected_str, &te_selected);
             cairo_text_extents(cairo, label_unselected_str, &te_unselected);
+
+            double text_w = te_selected.x_advance + te_unselected.x_advance;
+
+            // When the label is wider than its area, widen the tag behind
+            // it (vimium-style) instead of letting the text bleed out with
+            // no background.
+            if (text_w + 2 * LABEL_H_PADDING > a.w) {
+                double lx = a.x + (a.w - text_w) / 2. - LABEL_H_PADDING;
+                double lw = text_w + 2 * LABEL_H_PADDING;
+
+                cairo_set_operator(cairo, CAIRO_OPERATOR_SOURCE);
+                cairo_set_source_u32(cairo, config->selectable_bg_color);
+                cairo_rectangle(cairo, lx, a.y, lw, a.h);
+                cairo_fill(cairo);
+
+                cairo_set_source_u32(cairo, config->selectable_border_color);
+                cairo_rectangle(cairo, lx + .5, a.y + .5, lw - 1, a.h - 1);
+                cairo_set_line_width(cairo, 1);
+                cairo_stroke(cairo);
+            }
 
             cairo_move_to(
                 cairo,
