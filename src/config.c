@@ -96,6 +96,23 @@ static int parse_uint8(void *dest, char *value) {
     return 0;
 }
 
+static int parse_bool(void *dest, char *value) {
+    if (strcmp(value, "true") == 0 || strcmp(value, "yes") == 0 ||
+        strcmp(value, "1") == 0) {
+        *((bool *)dest) = true;
+        return 0;
+    }
+
+    if (strcmp(value, "false") == 0 || strcmp(value, "no") == 0 ||
+        strcmp(value, "0") == 0) {
+        *((bool *)dest) = false;
+        return 0;
+    }
+
+    LOG_ERR("Invalid boolean value '%s'.", value);
+    return 1;
+}
+
 static int parse_relative_font_size(void *dest, char *value) {
     struct relative_font_size *rfs = dest;
 
@@ -386,7 +403,8 @@ static struct section_def section_defs[] = {
         MF_FIELD(label_font_size, "12 50% 100", parse_relative_font_size, noop),
         MF_FIELD(
             label_symbols, "abcdefghijklmnopqrstuvwxyz", parse_str, free_str
-        )
+        ),
+        MF_FIELD(label_progressive, "false", parse_bool, noop)
     ),
     SECTION(
         mode_bisect, MB_FIELD(label_color, "#fffd", parse_color, noop),

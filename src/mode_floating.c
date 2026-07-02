@@ -230,6 +230,21 @@ void floating_mode_render(
                 ms->label_selection->next
             );
 
+            // In progressive mode, only show the next symbol to type; the
+            // following ones are revealed as the selection narrows down.
+            if (config->label_progressive &&
+                ms->label_selection->next < curr_label->next) {
+                label_selected_str[0] = '\0';
+                snprintf(
+                    label_unselected_str, label_str_max_len, "%s",
+                    label_symbols_idx_to_ptr(
+                        ms->label_symbols,
+                        curr_label->input[ms->label_selection->next]
+                    )
+                );
+                cairo_text_extents(cairo, label_unselected_str, &te_all);
+            }
+
             cairo_text_extents_t te_selected, te_unselected;
             cairo_text_extents(cairo, label_selected_str, &te_selected);
             cairo_text_extents(cairo, label_unselected_str, &te_unselected);

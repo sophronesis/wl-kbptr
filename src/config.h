@@ -3,6 +3,7 @@
 
 #include "utils.h"
 
+#include <stdbool.h>
 #include <stdint.h>
 
 struct general_config {
@@ -43,6 +44,7 @@ struct mode_floating_config {
     char                     *label_font_family;
     struct relative_font_size label_font_size;
     char                     *label_symbols;
+    bool                      label_progressive;
 };
 
 struct mode_bisect_config {
